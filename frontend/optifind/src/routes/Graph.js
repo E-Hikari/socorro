@@ -1,4 +1,4 @@
-import React, {useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import ReactFlow, {
   addEdge,
   MiniMap,
@@ -14,44 +14,44 @@ import ReactFlow, {
 import "reactflow/dist/style.css";
 import "../styles.css";
 import Navbar from "../components/Navbar";
+import api from "../services/api";
 
-
-import ProcessLibrary  from "../components/ProcessLibrary";
+import ProcessLibrary from "../components/ProcessLibrary";
 
 import {
   nodes as initialNodes,
-  edges as initialEdges
+  edges as initialEdges,
 } from "../components/initial-elements";
 
+const flowKey = "example-flow";
 
-const flowKey = 'example-flow';
-
-const getNodeId = () => 'New Node';
-
+const getNodeId = () => "New Node";
 
 function downloadImage(dataUrl) {
-  const a = document.createElement('a');
+  const a = document.createElement("a");
 
-  a.setAttribute('download', 'reactflow.png');
-  a.setAttribute('href', dataUrl);
+  a.setAttribute("download", "reactflow.png");
+  a.setAttribute("href", dataUrl);
   a.click();
 }
- 
-  const SaveRestore = () => {
+
+const SaveRestore = () => {
   const reactFlowWrapper = useRef(true);
   const edgeUpdateSuccessful = useRef(true);
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [rfInstance, setRfInstance] = useState(null);
-  const onConnect = useCallback((params) => setEdges((els) => addEdge(params, els)), []);
- 
+  const onConnect = useCallback(
+    (params) => setEdges((els) => addEdge(params, els)),
+    []
+  );
+
   const { setViewport } = useReactFlow();
   const onEdgeUpdateStart = useCallback(() => {
     edgeUpdateSuccessful.current = false;
   }, []);
 
-
-  const getId = () => `dndode_${+new Date()}`
+  const getId = () => `dndode_${+new Date()}`;
   const onEdgeUpdate = useCallback((oldEdge, newConnection) => {
     edgeUpdateSuccessful.current = true;
     setEdges((els) => updateEdge(oldEdge, newConnection, els));
@@ -64,14 +64,13 @@ function downloadImage(dataUrl) {
 
     edgeUpdateSuccessful.current = true;
   }, []);
-  const onInit = (reactFlowInstance) =>{
-     setRfInstance(reactFlowInstance);
+  const onInit = (reactFlowInstance) => {
+    setRfInstance(reactFlowInstance);
     console.log("flow loaded:", reactFlowInstance);
-  }
-
+  };
 
   const onAddM = useCallback(() => {
-   const id = getNodeId();
+    const id = getNodeId();
     const newNode = {
       id: id,
       data: { label: "MixProof" },
@@ -83,7 +82,7 @@ function downloadImage(dataUrl) {
         background: "#ff465b",
         color: "#333",
         border: "1px solid #222138",
-        width: 180
+        width: 180,
       },
     };
     setNodes((nds) => nds.concat(newNode));
@@ -91,45 +90,61 @@ function downloadImage(dataUrl) {
 
   const onAddT = useCallback(() => {
     const id = getNodeId();
-     const newNode = {
-       id: id,
-       data: { label: "Tank" },
-       position: {
-         x: 100,
-         y: 200,
-       },
-       style: {
+    const newNode = {
+      id: id,
+      data: { label: "Tank" },
+      position: {
+        x: 100,
+        y: 200,
+      },
+      style: {
         background: "#00b9a4",
         color: "#333",
         border: "1px solid #222138",
-        width: 180
-      }
-     };
-     setNodes((nds) => nds.concat(newNode));
-   }, [setNodes]);
+        width: 180,
+      },
+    };
+    useEffect(() => {
+      api
+        .post("http://localhost:8080/tank", {
+          name: "Left4Dead",
+          status: "alive",
+          location: "heaven",
+          condition: "bad",
+          way: "upright",
+        })
+        .then((res) => {
+          console.log("Sua requisição foi um sucesso: ", res);
+          setNodes((nds) => nds.concat(newNode));
+        })
+        .catch((err) => {
+          console.log("ops! ocorreu um erro: ", err);
+        });
+    }, []);
+  }, [setNodes]);
 
-   const onAddS = useCallback(() => {
+  const onAddS = useCallback(() => {
     const id = getNodeId();
-     const newNode = {
-       id: id,
-       data: { label: "Solenoide" },
-       position: {
-         x: 100,
-         y: 200,
-       },
-       style: {
+    const newNode = {
+      id: id,
+      data: { label: "Solenoide" },
+      position: {
+        x: 100,
+        y: 200,
+      },
+      style: {
         background: "#46e9ff",
         color: "#333",
         border: "1px solid #222138",
-        width: 180
+        width: 180,
       },
-     };
-     setNodes((nds) => nds.concat(newNode));
-   }, [setNodes]);
+    };
+    setNodes((nds) => nds.concat(newNode));
+  }, [setNodes]);
 
   const onDragOver = useCallback((event) => {
     event.preventDefault();
-    event.dataTransfer.dropEffect = 'move';
+    event.dataTransfer.dropEffect = "move";
   }, []);
 
   const onDrop = useCallback(
@@ -137,10 +152,10 @@ function downloadImage(dataUrl) {
       event.preventDefault();
 
       const reactFlowBounds = reactFlowWrapper.current.getBoundingClientRect();
-      const type = event.dataTransfer.getData('application/reactflow');
+      const type = event.dataTransfer.getData("application/reactflow");
 
       // check if the dropped element is valid
-      if (typeof type === 'undefined' || !type) {
+      if (typeof type === "undefined" || !type) {
         return;
       }
 
@@ -160,60 +175,56 @@ function downloadImage(dataUrl) {
     [rfInstance]
   );
 
-
-
   return (
-
     <div className="reactflow-wrapper" ref={reactFlowWrapper}>
-    <ReactFlow
-      nodes={nodes}
-      edges={edges}
-      onNodesChange={onNodesChange}
-      onEdgesChange={onEdgesChange}
-      onEdgeUpdate={onEdgeUpdate}
-      onEdgeUpdateStart={onEdgeUpdateStart}
-      onEdgeUpdateEnd={onEdgeUpdateEnd}
-      onConnect={onConnect}
-      onInit={setRfInstance}
-      onDrop={onDrop}
-      onDragOver={onDragOver}
-      fitView
-      attributionPosition="top-right"
-    >
-      <MiniMap
-        nodeStrokeColor={(n) => {
-          if (n.style?.background) return n.style.background;
-          if (n.type === "input") return "#0041d0";
-          if (n.type === "output") return "#ff0072";
-          if (n.type === "default") return "#1a192b";
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        onEdgeUpdate={onEdgeUpdate}
+        onEdgeUpdateStart={onEdgeUpdateStart}
+        onEdgeUpdateEnd={onEdgeUpdateEnd}
+        onConnect={onConnect}
+        onInit={setRfInstance}
+        onDrop={onDrop}
+        onDragOver={onDragOver}
+        fitView
+        attributionPosition="top-right"
+      >
+        <MiniMap
+          nodeStrokeColor={(n) => {
+            if (n.style?.background) return n.style.background;
+            if (n.type === "input") return "#0041d0";
+            if (n.type === "output") return "#ff0072";
+            if (n.type === "default") return "#1a192b";
 
-          return "#eee";
-        }}
-        nodeColor={(n) => {
-          if (n.style?.background) return n.style.background;
+            return "#eee";
+          }}
+          nodeColor={(n) => {
+            if (n.style?.background) return n.style.background;
 
-          return "#fff";
-        }}
-        nodeBorderRadius={2}
-      />
-      <Controls />
-      <Background color="#aaa" gap={16} />
-      <Panel position="bottom-center">
-        <button onClick={onAddT}>Tank</button>
-        <button onClick={onAddM}>Mixproof</button>
-        <button onClick={onAddS}>Solenoide</button>
-      </Panel>
-    </ReactFlow>
+            return "#fff";
+          }}
+          nodeBorderRadius={2}
+        />
+        <Controls />
+        <Background color="#aaa" gap={16} />
+        <Panel position="bottom-center">
+          <button onClick={onAddT}>Tank</button>
+          <button onClick={onAddM}>Mixproof</button>
+          <button onClick={onAddS}>Solenoide</button>
+        </Panel>
+      </ReactFlow>
     </div>
   );
 };
 export default () => (
-
   <div className="dndflow">
     <Navbar />
     <ReactFlowProvider>
-    <SaveRestore />
-  </ReactFlowProvider>
-  <ProcessLibrary/>
+      <SaveRestore />
+    </ReactFlowProvider>
+    <ProcessLibrary />
   </div>
 );
